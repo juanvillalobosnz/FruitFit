@@ -3,7 +3,7 @@ import perderVida from "@assets/scripts/perderVida";
 import recogerFruta from "@assets/scripts/recogerFruta";
 import recogerVerdura from "@assets/scripts/recogerVerdura";
 import Menuprincipals from "@assets/scripts/MenuPrincipal";
-import GameOver from "./assets/scripts/GameOver";
+import GameOver from "@assets/scripts/GameOver";
 
 
 let cursors;
@@ -41,73 +41,68 @@ class Game extends Phaser.Scene {
   }
 
   create() {
-    
-    this.input.on('pointermove', function (pointer) {
-      this.cesta.x = pointer.x;
-    }, this);
-
     let gameWidth = this.sys.game.config.width;
     let gameHeight = this.sys.game.config.height;
-
-    let fondo = this.add.image(0, 0, "fondo");
-    let scaleFactor = Math.min(
-      gameWidth / fondo.width,
-      gameHeight / fondo.height
-    );
+  
+    // Fondo
+    let fondo = this.add.image(0, 0, "fondo").setOrigin(0, 0);
+    let scaleFactor = Math.max(gameWidth / fondo.width, gameHeight / fondo.height);
     fondo.setScale(scaleFactor);
-    fondo.setPosition(gameWidth / 2, gameHeight / 2);
-
-    this.cesta = this.physics.add
-      .image(400, 500, "cesta")
-      .setCollideWorldBounds(true)
-      .setScale(0.5);
-
+  
+    // Cesta
+    this.cesta = this.physics.add.image(400, 500, "cesta").setCollideWorldBounds(true).setScale(0.5);
+  
+    // Frutas
     this.frutas = this.physics.add.group({
       key: "kiwi",
-      repeat: 9, // Esto creará 10 imágenes en total (1 base + 9 repetidas)
+      repeat: 9,
       setXY: { x: 12, y: 0, stepX: 70 },
     });
-
+  
+    // Verduras
     this.verduras = this.physics.add.group({
       key: "durazno",
       repeat: 9,
       setXY: { x: 12, y: 0, stepX: 70 },
     });
-
+  
+    // Comida chatarra
     this.comidaChatarra = this.physics.add.group({
       key: "Sandia",
       repeat: 4,
       setXY: { x: 12, y: 0, stepX: 70 },
     });
-
-    Phaser.Actions.RandomRectangle(
-      this.frutas.getChildren(),
-      new Phaser.Geom.Rectangle(100, 100, 600, 300)
-    );
-    Phaser.Actions.RandomRectangle(
-      this.verduras.getChildren(),
-      new Phaser.Geom.Rectangle(100, 100, 600, 300)
-    );
-    Phaser.Actions.RandomRectangle(
-      this.comidaChatarra.getChildren(),
-      new Phaser.Geom.Rectangle(100, 100, 600, 300)
-    );
-
+  
+    // Posicionamiento aleatorio
+    let randomArea = new Phaser.Geom.Rectangle(100, 100, 600, 300);
+    Phaser.Actions.RandomRectangle(this.frutas.getChildren(), randomArea);
+    Phaser.Actions.RandomRectangle(this.verduras.getChildren(), randomArea);
+    Phaser.Actions.RandomRectangle(this.comidaChatarra.getChildren(), randomArea);
+  
+    // Puntuación y vidas
     this.puntuacion = 0;
     this.vidas = 3;
     this.textoPuntuacion = this.add.text(
-      100,
+      gameWidth / 2,
       50,
       `Puntuación: ${this.puntuacion} - Vidas: ${this.vidas}`,
       {
-        fontSize: "24px",
+        fontSize: "32px",
         color: "#fff",
+        fontStyle: 'bold'
       }
-    );
-
+    ).setOrigin(0.5);
+  
+    // Controles
     cursors = this.input.keyboard.createCursorKeys();
     restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+  
+    // Movimiento de la cesta con el ratón
+    this.input.on('pointermove', function (pointer) {
+      this.cesta.x = Phaser.Math.Clamp(pointer.x, 0, gameWidth);
+    }, this);
   }
+  
 
   update() {
     let speed = 10;

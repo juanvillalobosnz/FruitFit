@@ -4,7 +4,7 @@ class GameOver extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor("#81BE81"); // Aquí puedes poner el color que quieras
+    this.cameras.main.setBackgroundColor("#81BE81");
     let gameOverText = this.add
       .text(
         this.sys.game.config.width / 2,
@@ -37,6 +37,28 @@ class GameOver extends Phaser.Scene {
     restartButton.on("pointerdown", () => {
       this.scene.stop();
       this.scene.start("Game");
+    });
+
+    // Botón de menú principal
+    let mainMenuButton = this.add
+      .text(
+        this.sys.game.config.width / 2,
+        this.sys.game.config.height / 2 + 200,
+        "Menú Principal",
+        {
+          fontSize: "42px",
+          fill: "#FFFFFF",
+          backgroundColor: "#4CD31E",
+          fontFamily: "Arco Font",
+          padding: { left: 10, right: 10, top: 10, bottom: 10 },
+        }
+      )
+      .setOrigin(0.5)
+      .setInteractive();
+
+    mainMenuButton.on("pointerdown", () => {
+      this.scene.stop();
+      this.scene.start("MenuPrincipal");
     });
   }
 }

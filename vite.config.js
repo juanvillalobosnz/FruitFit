@@ -4,7 +4,7 @@ import path from 'path'
 export default defineConfig({
   resolve: {
     alias: {
-      '@public': path.resolve(__dirname, './public')
+      '@assets': path.resolve(__dirname, './assets')
     }
   }
 })

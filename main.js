@@ -1,8 +1,9 @@
 import Phaser from "phaser";
-import perderVida from "@public/js/perderVida";
-import recogerFruta from "@public/js/recogerFruta";
-import recogerVerdura from "@public/js/recogerVerdura";
-import Menuprincipals from "@public/js/MenuPrincipal"
+import perderVida from "@assets/scripts/perderVida";
+import recogerFruta from "@assets/scripts/recogerFruta";
+import recogerVerdura from "@assets/scripts/recogerVerdura";
+import Menuprincipals from "@assets/scripts/MenuPrincipal";
+import GameOver from "./assets/scripts/GameOver";
 
 
 let cursors;
@@ -30,17 +31,21 @@ class Game extends Phaser.Scene {
     });
 
     // Ahora carga tus archivos
-    this.load.image("fond2", "images/wall.jpg");
-    this.load.image("fondo", "images/fondo.jpg");
-    this.load.image("kiwi", "images/kiwi.png");
-    this.load.image("durazno", "images/durazno.png");
-    this.load.image("Sandia", "images/Sandia.png");
-    this.load.image("cesta", "images/cesta.png");
-    this.load.audio("sonidoRecogida", "sounds/recojida.mp3");
-    this.load.audio("sonidoDaño", "sounds/daño.mp3");
+    this.load.image("fondo", "assets/images/wall.png");
+    this.load.image("kiwi", "assets/images/kiwi.png");
+    this.load.image("durazno", "assets/images/durazno.png");
+    this.load.image("Sandia", "assets/images/Sandia.png");
+    this.load.image("cesta", "assets/images/cesta.png");
+    this.load.audio("sonidoRecogida", "assets/audio/recojida.mp3");
+    this.load.audio("sonidoDaño", "assets/audio/daño.mp3");
   }
 
   create() {
+    
+    this.input.on('pointermove', function (pointer) {
+      this.cesta.x = pointer.x;
+    }, this);
+
     let gameWidth = this.sys.game.config.width;
     let gameHeight = this.sys.game.config.height;
 
@@ -89,7 +94,7 @@ class Game extends Phaser.Scene {
     );
 
     this.puntuacion = 0;
-    this.vidas = 10;
+    this.vidas = 3;
     this.textoPuntuacion = this.add.text(
       100,
       50,
@@ -106,81 +111,45 @@ class Game extends Phaser.Scene {
 
   update() {
     let speed = 10;
-    if (cursors.left.isDown) {
+    if (cursors.left.isDown || this.input.activePointer.isDown && this.input.x < this.cesta.x) {
       this.cesta.x = Phaser.Math.Clamp(
         this.cesta.x - speed,
         0,
-        game.config.width
+        this.sys.game.config.width
       );
-    } else if (cursors.right.isDown) {
+    } else if (cursors.right.isDown || this.input.activePointer.isDown && this.input.x > this.cesta.x) {
       this.cesta.x = Phaser.Math.Clamp(
         this.cesta.x + speed,
         0,
-        game.config.width
+        this.sys.game.config.width
       );
     }
-
-    if (restartKey.isDown) {
-      this.scene.restart();
-    }
-
+  
     this.physics.add.overlap(this.cesta, this.frutas, recogerFruta, null, this);
-    this.physics.add.overlap(
-      this.cesta,
-      this.verduras,
-      recogerVerdura,
-      null,
-      this
-    );
-    this.physics.add.overlap(
-      this.cesta,
-      this.comidaChatarra,
-      perderVida,
-      null,
-      this
-    );
-    this.textoPuntuacion.setText(
-      `Puntuación: ${this.puntuacion} - Vidas: ${this.vidas}`
-    );
-
+    this.physics.add.overlap(this.cesta, this.verduras, recogerVerdura, null, this);
+    this.physics.add.overlap(this.cesta, this.comidaChatarra, perderVida, null, this);
+  
+    this.textoPuntuacion.setText(`Puntuación: ${this.puntuacion} - Vidas: ${this.vidas}`);
+    this.textoPuntuacion.setFontSize('32px');
+    this.textoPuntuacion.setPosition(this.sys.game.config.width / 2, 50);
+    this.textoPuntuacion.setOrigin(0.5);
+  
     if (this.vidas <= 0) {
-      this.scene.pause();
-      let gameOverText = this.add
-        .text(
-          game.config.width / 2,
-          game.config.height / 2,
-          "¡Se te acabaron las vidas!",
-          {
-            fontSize: "48px",
-            color: "#f00",
-          }
-        )
-        .setOrigin(0.5);
-
-      let restartButton = this.add
-        .text(
-          game.config.width / 2,
-          game.config.height / 2 + 100,
-          "Reiniciar",
-          {
-            fontSize: "32px",
-            color: "#0f0",
-          }
-        )
-        .setOrigin(0.5)
-        .setInteractive();
-
-      restartButton.on("pointerdown", () => {
-        this.scene.restart();
-      });
+      this.scene.start('GameOver');
     }
+    
   }
+  
 }
 
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  scale: {
+    mode: Phaser.Scale.CENTER_VERTICALLY,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: window.innerWidth,
+    height: window.innerHeight
+  },
   physics: {
     default: "arcade",
     arcade: {
@@ -188,7 +157,8 @@ const config = {
       gravity: { y: 200 },
     },
   },
-  scene: [Menuprincipals, Game],
+  scene: [Menuprincipals, Game,GameOver],
 };
 
 let game = new Phaser.Game(config);
+

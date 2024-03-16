@@ -7,24 +7,52 @@ class MenuPrincipal extends Phaser.Scene {
     let centerX = this.cameras.main.centerX;
     let centerY = this.cameras.main.centerY;
 
-    // Fondo del menú
-    this.add.rectangle(centerX, centerY, this.cameras.main.width, this.cameras.main.height, 0x1d1d1d);
+    this.cameras.main.setBackgroundColor("#81BE81");
 
     // Título del juego
-    this.add.text(centerX, centerY - 100, "FruitFit", { fill: "#FFFFFF", fontSize: '60px',  fontStyle: 'bold', fontFamily: 'Arco Font'}).setOrigin(0.5);
+    let title = this.add
+      .text(centerX, centerY - 200, "FruitFit", {
+        fill: "#FFFFFF",
+        fontSize: "80px",
+        fontStyle: "bold",
+        fontFamily: "Arco Font",
+      })
+      .setOrigin(0.5);
+
+    // Animación del título
+    this.tweens.add({
+      targets: title,
+      y: centerY - 180,
+      duration: 2000,
+      ease: "Power2",
+      yoyo: true,
+      loop: -1,
+    });
 
     // Botón de jugar
-    let jugarButton = this.add.text(centerX, centerY, "Jugar", { fill: "#FFFFFF", fontSize: '32px', backgroundColor: '#0000FF', fontFamily: 'Arco Font' })
+    let jugarButton = this.add
+      .text(centerX, centerY, "Jugar", {
+        fill: "#FFFFFF",
+        fontSize: "48px",
+        backgroundColor: "#4CD31E",
+        fontFamily: "Arco Font",
+      })
       .setInteractive()
-      .setPadding(10)
+      .setPadding(20)
       .setOrigin(0.5);
 
     jugarButton.on("pointerdown", () => this.startGame());
 
     // Botón de opciones
-    let opcionesButton = this.add.text(centerX, centerY + 100, "Opciones", { fill: "#FFFFFF", fontSize: '32px', backgroundColor: '#0000FF', fontFamily: 'Arco Font' })
+    let opcionesButton = this.add
+      .text(centerX, centerY + 100, "Opciones", {
+        fill: "#FFFFFF",
+        fontSize: "48px",
+        backgroundColor: "#4CD31E",
+        fontFamily: "Arco Font",
+      })
       .setInteractive()
-      .setPadding(10)
+      .setPadding(20)
       .setOrigin(0.5);
 
     opcionesButton.on("pointerdown", () => this.openOptions());
@@ -40,4 +68,3 @@ class MenuPrincipal extends Phaser.Scene {
 }
 
 export default MenuPrincipal;
-  

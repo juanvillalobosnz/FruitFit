@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'Arco Font';
-    src: url('@assets/fonts/ARCO_OSX.otf') format('woff2'),
-         url('@assets/fonts/ARCO.ttf') format('woff');
+    src: url('/assets/fonts/ARCO_OSX.otf') format('woff2'),
+         url('/assets/fonts/ARCO.ttf') format('woff');
   }
   

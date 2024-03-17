@@ -4,13 +4,17 @@ import recogerFruta from "@assets/scripts/recogerFruta";
 import recogerVerdura from "@assets/scripts/recogerVerdura";
 import Menuprincipals from "@assets/scripts/MenuPrincipal";
 import GameOver from "@assets/scripts/GameOver";
-
-let cursors;
-let restartKey;
+import { recursos } from "@assets/scripts/recursos";
 
 class Game extends Phaser.Scene {
   constructor() {
     super({ key: "Game" });
+    this.cursors = null;
+    this.restartKey = null;
+  }
+
+  handlePointerMove(pointer) {
+    this.cesta.x = Phaser.Math.Clamp(pointer.x, 0, this.sys.game.config.width);
   }
 
   createGroup(key, repeat) {
@@ -22,29 +26,23 @@ class Game extends Phaser.Scene {
   }
 
   preload() {
-    // Agrega un evento de 'progress' para mostrar el progreso de la carga
-    this.load.on("progress", function (value) {
-      console.log(`Progreso de carga: ${value * 100}%`);
-    });
-
-    // Agrega un evento de 'fileprogress' para mostrar el progreso de cada archivo
-    this.load.on("fileprogress", function (file) {
-      console.log(`Cargando archivo: ${file.key}`);
-    });
-
-    // Agrega un evento de 'complete' para indicar cuando se ha completado la carga
-    this.load.on("complete", function () {
-      console.log("Carga completa");
-    });
+    // Ahora carga tus archivos
+    const IMAGEN_FONDO = "fondo";
+    const IMAGEN_KIWI = "kiwi";
+    const IMAGEN_DURAZNO = "durazno";
+    const IMAGEN_COMIDA_CHATARRA = "Sandia";
+    const IMAGEN_CESTA = "cesta";
+    const SONIDO_RECOGIDA = "sonidoRecogida";
+    const SONIDO_DAÑO = "sonidoDaño";
 
     // Ahora carga tus archivos
-    this.load.image("fondo", "assets/images/wall.png");
-    this.load.image("kiwi", "assets/images/kiwi.png");
-    this.load.image("durazno", "assets/images/durazno.png");
-    this.load.image("Sandia", "assets/images/Sandia.png");
-    this.load.image("cesta", "assets/images/cesta.png");
-    this.load.audio("sonidoRecogida", "assets/audio/recojida.mp3");
-    this.load.audio("sonidoDaño", "assets/audio/daño.mp3");
+    this.load.image(IMAGEN_FONDO, recursos.imagenes.fondo);
+    this.load.image(IMAGEN_KIWI, recursos.imagenes.kiwi);
+    this.load.image(IMAGEN_DURAZNO, recursos.imagenes.durazno);
+    this.load.image(IMAGEN_COMIDA_CHATARRA, recursos.imagenes.sandia);
+    this.load.image(IMAGEN_CESTA, recursos.imagenes.cesta);
+    this.load.audio(SONIDO_RECOGIDA, recursos.audio.sonidoRecogida);
+    this.load.audio(SONIDO_DAÑO, recursos.audio.sonidoDaño);
   }
 
   create() {
@@ -100,23 +98,19 @@ class Game extends Phaser.Scene {
       .setOrigin(0.5);
 
     // Controles
-    cursors = this.input.keyboard.createCursorKeys();
-    restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.restartKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.R
+    );
 
     // Movimiento de la cesta con el ratón
-    this.input.on(
-      "pointermove",
-      function (pointer) {
-        this.cesta.x = Phaser.Math.Clamp(pointer.x, 0, gameWidth);
-      },
-      this
-    );
+    this.input.on("pointermove", this.handlePointerMove, this);
   }
 
   update() {
     let speed = 10;
     if (
-      cursors.left.isDown ||
+      this.cursors.left.isDown ||
       (this.input.activePointer.isDown && this.input.x < this.cesta.x)
     ) {
       this.cesta.x = Phaser.Math.Clamp(
@@ -125,7 +119,7 @@ class Game extends Phaser.Scene {
         this.sys.game.config.width
       );
     } else if (
-      cursors.right.isDown ||
+      this.cursors.right.isDown ||
       (this.input.activePointer.isDown && this.input.x > this.cesta.x)
     ) {
       this.cesta.x = Phaser.Math.Clamp(

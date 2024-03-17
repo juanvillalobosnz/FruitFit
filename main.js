@@ -1,10 +1,7 @@
 import Phaser from "phaser";
-import perderVida from "@assets/scripts/perderVida";
-import recogerFruta from "@assets/scripts/recogerFruta";
-import recogerVerdura from "@assets/scripts/recogerVerdura";
+import { recursos } from "@assets/scripts/recursos";
 import Menuprincipals from "@assets/scripts/MenuPrincipal";
 import GameOver from "@assets/scripts/GameOver";
-import { recursos } from "@assets/scripts/recursos";
 
 class Game extends Phaser.Scene {
   constructor() {
@@ -13,82 +10,114 @@ class Game extends Phaser.Scene {
     this.restartKey = null;
   }
 
-  handlePointerMove(pointer) {
-    this.cesta.x = Phaser.Math.Clamp(pointer.x, 0, this.sys.game.config.width);
+  crearObjetos(grupo, key, cantidad) {
+    for (let i = 0; i < cantidad; i++) {
+        const objeto = grupo.create(Phaser.Math.Between(0, this.sys.game.config.width), 100, key);
+        objeto.setVelocityY(200);
+        objeto.setScale(0.07);
+    }
   }
 
-  createGroup(key, repeat) {
-    return this.physics.add.group({
+  preload() {
+    this.loadAssets();
+  }
+
+  create() {
+    this.createGameElements();
+    this.createControls();
+  }
+
+  loadAssets() {
+    // Cargar imágenes de fondo y cesta
+    this.load.image("fondo", recursos.imagenes.fondo);
+    this.load.image("cesta", recursos.imagenes.cesta);
+
+    // Cargar imágenes de frutas
+    for (const [key, path] of Object.entries(recursos.imagenes.frutas)) {
+      this.load.image(key, path);
+    }
+
+    // Cargar imágenes de verduras
+    for (const [key, path] of Object.entries(recursos.imagenes.verduras)) {
+      this.load.image(key, path);
+    }
+
+    // Cargar imágenes de comida chatarra
+    for (const [key, path] of Object.entries(
+      recursos.imagenes.comidaChatarra
+    )) {
+      this.load.image(key, path);
+    }
+
+    // Cargar audio
+    this.load.audio("sonidoRecogida", recursos.audio.sonidoRecogida);
+    this.load.audio("sonidoDaño", recursos.audio.sonidoDaño);
+  }
+
+  createGameElements() {
+    this.createBackground();
+    this.createBasket();
+    this.createCollectibles();
+    this.createScoreAndLives();
+  }
+
+  createBackground() {
+    const gameWidth = this.sys.game.config.width;
+    const gameHeight = this.sys.game.config.height;
+    const background = this.add.image(0, 0, "fondo").setOrigin(0, 0);
+    const scaleFactor = Math.max(
+      gameWidth / background.width,
+      gameHeight / background.height
+    );
+    background.setScale(scaleFactor);
+  }
+
+  createBasket() {
+    this.basket = this.physics.add
+      .image(400, 500, "cesta")
+      .setCollideWorldBounds(true)
+      .setScale(0.5);
+  }
+
+  createCollectibles() {
+    this.frutas = this.physics.add.group();
+    this.verduras = this.physics.add.group();
+    this.comidaChatarra = this.physics.add.group();
+
+    // Crear frutas
+    for (const key of Object.keys(recursos.imagenes.frutas)) {
+      this.crearObjetos(this.frutas, key, 9);
+    }
+
+    // Crear verduras
+    for (const key of Object.keys(recursos.imagenes.verduras)) {
+      this.crearObjetos(this.verduras, key, 9);
+    }
+
+    // Crear comida chatarra
+    for (const key of Object.keys(recursos.imagenes.comidaChatarra)) {
+      this.crearObjetos(this.comidaChatarra, key, 4);
+    }
+  }
+
+  createGroup(groupName, key, repeat) {
+    this[groupName] = this.physics.add.group({
       key: key,
       repeat: repeat,
       setXY: { x: 12, y: 0, stepX: 70 },
     });
+    const randomArea = new Phaser.Geom.Rectangle(100, 100, 600, 300);
+    Phaser.Actions.RandomRectangle(this[groupName].getChildren(), randomArea);
   }
 
-  preload() {
-    // Ahora carga tus archivos
-    const IMAGEN_FONDO = "fondo";
-    const IMAGEN_KIWI = "kiwi";
-    const IMAGEN_DURAZNO = "durazno";
-    const IMAGEN_COMIDA_CHATARRA = "Sandia";
-    const IMAGEN_CESTA = "cesta";
-    const SONIDO_RECOGIDA = "sonidoRecogida";
-    const SONIDO_DAÑO = "sonidoDaño";
-
-    // Ahora carga tus archivos
-    this.load.image(IMAGEN_FONDO, recursos.imagenes.fondo);
-    this.load.image(IMAGEN_KIWI, recursos.imagenes.kiwi);
-    this.load.image(IMAGEN_DURAZNO, recursos.imagenes.durazno);
-    this.load.image(IMAGEN_COMIDA_CHATARRA, recursos.imagenes.sandia);
-    this.load.image(IMAGEN_CESTA, recursos.imagenes.cesta);
-    this.load.audio(SONIDO_RECOGIDA, recursos.audio.sonidoRecogida);
-    this.load.audio(SONIDO_DAÑO, recursos.audio.sonidoDaño);
-  }
-
-  create() {
-    let gameWidth = this.sys.game.config.width;
-    let gameHeight = this.sys.game.config.height;
-
-    // Fondo
-    let fondo = this.add.image(0, 0, "fondo").setOrigin(0, 0);
-    let scaleFactor = Math.max(
-      gameWidth / fondo.width,
-      gameHeight / fondo.height
-    );
-    fondo.setScale(scaleFactor);
-
-    // Cesta
-    this.cesta = this.physics.add
-      .image(400, 500, "cesta")
-      .setCollideWorldBounds(true)
-      .setScale(0.5);
-
-    // Frutas
-    this.frutas = this.createGroup("kiwi", 9);
-
-    // Verduras
-    this.verduras = this.createGroup("durazno", 9);
-
-    // Comida chatarra
-    this.comidaChatarra = this.createGroup("Sandia", 4);
-
-    // Posicionamiento aleatorio
-    let randomArea = new Phaser.Geom.Rectangle(100, 100, 600, 300);
-    Phaser.Actions.RandomRectangle(this.frutas.getChildren(), randomArea);
-    Phaser.Actions.RandomRectangle(this.verduras.getChildren(), randomArea);
-    Phaser.Actions.RandomRectangle(
-      this.comidaChatarra.getChildren(),
-      randomArea
-    );
-
-    // Puntuación y vidas
-    this.puntuacion = 0;
-    this.vidas = 5;
-    this.textoPuntuacion = this.add
+  createScoreAndLives() {
+    this.score = 0;
+    this.lives = 5;
+    this.scoreText = this.add
       .text(
-        gameWidth / 2,
+        this.sys.game.config.width / 2,
         50,
-        `Puntuación: ${this.puntuacion} - Vidas: ${this.vidas}`,
+        `Score: ${this.score} - Lives: ${this.lives}`,
         {
           fontSize: "32px",
           color: "#fff",
@@ -96,65 +125,153 @@ class Game extends Phaser.Scene {
         }
       )
       .setOrigin(0.5);
+  }
 
-    // Controles
+  createControls() {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.restartKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.R
     );
-
-    // Movimiento de la cesta con el ratón
     this.input.on("pointermove", this.handlePointerMove, this);
   }
 
+  handlePointerMove(pointer) {
+    this.basket.x = Phaser.Math.Clamp(pointer.x, 0, this.sys.game.config.width);
+  }
+
   update() {
-    let speed = 10;
-    if (
+    this.updateBasketPosition();
+    this.checkCollisions();
+    this.updateScoreAndLives();
+    this.checkGameOver();
+  }
+
+  updateBasketPosition() {
+    const speed = 10;
+    const isMovingLeft =
       this.cursors.left.isDown ||
-      (this.input.activePointer.isDown && this.input.x < this.cesta.x)
-    ) {
-      this.cesta.x = Phaser.Math.Clamp(
-        this.cesta.x - speed,
+      (this.input.activePointer.isDown && this.input.x < this.basket.x);
+    const isMovingRight =
+      this.cursors.right.isDown ||
+      (this.input.activePointer.isDown && this.input.x > this.basket.x);
+
+    if (isMovingLeft) {
+      this.basket.x = Phaser.Math.Clamp(
+        this.basket.x - speed,
         0,
         this.sys.game.config.width
       );
-    } else if (
-      this.cursors.right.isDown ||
-      (this.input.activePointer.isDown && this.input.x > this.cesta.x)
-    ) {
-      this.cesta.x = Phaser.Math.Clamp(
-        this.cesta.x + speed,
+    } else if (isMovingRight) {
+      this.basket.x = Phaser.Math.Clamp(
+        this.basket.x + speed,
         0,
         this.sys.game.config.width
       );
     }
+  }
 
-    this.physics.add.overlap(this.cesta, this.frutas, recogerFruta, null, this);
-    this.physics.add.overlap(
-      this.cesta,
-      this.verduras,
-      recogerVerdura,
-      null,
-      this
-    );
-    this.physics.add.overlap(
-      this.cesta,
-      this.comidaChatarra,
-      perderVida,
-      null,
-      this
-    );
+  checkCollisions() {
+    // Colisiones para frutas
+    for (const key of Object.keys(recursos.imagenes.frutas)) {
+      this.physics.add.overlap(
+        this.basket,
+        this.frutas.getChildren().filter((child) => child.texture.key === key),
+        this.recogerFruta,
+        null,
+        this
+      );
+    }
 
-    this.textoPuntuacion.setText(
-      `Puntuación: ${this.puntuacion} - Vidas: ${this.vidas}`
-    );
-    this.textoPuntuacion.setFontSize("32px");
-    this.textoPuntuacion.setPosition(this.sys.game.config.width / 2, 50);
-    this.textoPuntuacion.setOrigin(0.5);
+    // Colisiones para verduras
+    for (const key of Object.keys(recursos.imagenes.verduras)) {
+      this.physics.add.overlap(
+        this.basket,
+        this.verduras
+          .getChildren()
+          .filter((child) => child.texture.key === key),
+        this.recogerVerdura,
+        null,
+        this
+      );
+    }
 
-    if (this.vidas <= 0) {
+    // Colisiones para comida chatarra
+    for (const key of Object.keys(recursos.imagenes.comidaChatarra)) {
+      this.physics.add.overlap(
+        this.basket,
+        this.comidaChatarra
+          .getChildren()
+          .filter((child) => child.texture.key === key),
+        this.perderVida,
+        null,
+        this
+      );
+    }
+  }
+
+  updateScoreAndLives() {
+    this.scoreText.setText(`Score: ${this.score} - Lives: ${this.lives}`);
+    this.scoreText.setFontSize("32px");
+    this.scoreText.setPosition(this.sys.game.config.width / 2, 50);
+    this.scoreText.setOrigin(0.5);
+  }
+
+  checkGameOver() {
+    if (this.lives <= 0) {
       this.scene.start("GameOver");
     }
+  }
+  recogerVerdura(cesta, verdura) {
+    this.score += 2; // Cambia 'puntuacion' a 'score'
+    verdura.destroy();
+    this.sound.play("sonidoRecogida");
+
+    if (this.verduras) {
+      let newVerdura = this.verduras.create(
+        Phaser.Math.Between(0, this.sys.game.config.width),
+        100,
+        "piza"
+      );
+      newVerdura.setVelocityY(200);
+      newVerdura.setScale(0.2);
+    }
+
+    // Animación de salto
+    this.tweens.add({
+      targets: cesta,
+      y: cesta.y - 50,
+      duration: 100,
+      yoyo: true,
+    });
+  }
+
+  recogerFruta(cesta, fruta) {
+    this.score++; // Cambia 'puntuacion' a 'score'
+    fruta.destroy();
+    this.sound.play("sonidoRecogida");
+    if (this.verduras) {
+      let newFruta = this.frutas.create(
+        Phaser.Math.Between(0, this.sys.game.config.width),
+        100,
+        "kiwi"
+      );
+      newFruta.setVelocityY(200);
+      newFruta.setScale(0.2);
+    }
+    // Animación de salto
+    this.tweens.add({
+      targets: cesta,
+      y: cesta.y - 50,
+      duration: 100,
+      yoyo: true,
+    });
+  }
+
+  perderVida(_, comidaChatarra) {
+    this.lives--;
+    comidaChatarra.destroy();
+    this.sound.play("sonidoDaño");
+    this.cameras.main.shake(200, 0.05);
   }
 }
 

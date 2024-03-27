@@ -96,7 +96,7 @@ class Game extends Phaser.Scene {
 
     // Crear comida chatarra
     for (const key of Object.keys(recursos.imagenes.comidaChatarra)) {
-      this.crearObjetos(this.comidaChatarra, key, 4);
+      this.crearObjetos(this.comidaChatarra, key, 8);
     }
   }
 
